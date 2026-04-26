@@ -14,6 +14,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] ESLint configuration
 - [x] Memory bank documentation
 - [x] Recipe system for common features
+- [x] Converted "Ready to remove" text into a functional button that triggers item deletion when trade ban expires
 
 ## Current Structure
 

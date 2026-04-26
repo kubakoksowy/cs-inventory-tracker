@@ -8,13 +8,13 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
+- [x] Base Next.js 16 setup with TypeScript
 - [x] Tailwind CSS 4 integration
 - [x] ESLint configuration
 - [x] Memory bank documentation
 - [x] Recipe system for common features
 - [x] Converted "Ready to remove" text into a functional button that triggers item deletion when trade ban expires
+- [x] Fixed profit calculation to only count after "ready to remove" (deletion)
 
 ## Current Structure
 
@@ -86,3 +86,4 @@ export async function GET() {
 | Date | Changes |
 |------|---------|
 | Initial | Template created with base setup |
+| 2026-04-26 | Fixed profit calculation: moved from status change (Sprzedane) to deletion (ready to remove) to match user requirement |

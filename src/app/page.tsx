@@ -762,10 +762,11 @@ function AppInner() {
             body: JSON.stringify({ userId: user.id, field: "totalItemsAdded", amount: -1 }),
           });
           if (item.status === "Sprzedane") {
+            // ✅ Now profit is only added on deletion ("ready to remove")
             await fetch("/api/stats", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: user.id, field: "totalSold", amount: -1 }),
+              body: JSON.stringify({ userId: user.id, field: "totalSold", amount: 1 }),
             });
             await fetch("/api/stats", {
               method: "POST",
@@ -776,6 +777,13 @@ function AppInner() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ userId: user.id, field: "totalProfitSold", amount: profit < 0 ? Math.abs(profit) : +profit }),
+            });
+          } else if (item.buy > 0) {
+            // If not sold, just remove the investment
+            await fetch("/api/stats", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: user.id, field: "totalInvested", amount: -item.buy }),
             });
           }
           const statsRes = await fetch(`/api/stats?userId=${user.id}`);
@@ -819,24 +827,9 @@ function AppInner() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updateBody),
         });
-        // Track cumulative stats when sold
-        if (newStatus === "Sprzedane") {
-          const profit = item.netSell - item.netBuy;
-          await fetch("/api/stats", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: user.id, field: "totalProfitSold", amount: profit }),
-          });
-          await fetch("/api/stats", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: user.id, field: "totalSold", amount: 1 }),
-          });
-          setCumulativeStats(prev => ({ ...prev, totalProfitSold: prev.totalProfitSold + profit, totalSold: prev.totalSold + 1 }));
-          
-          // ✅ DODAJ PRZEDMIOT DO HISTORII PRZY ZMIANIE STATUSU NA SPRZEDANE!
-          addHistory("Sprzedane", item.name, item);
-        }
+        // ✅ DODAJ PRZEDMIOT DO HISTORII PRZY ZMIANIE STATUSU NA SPRZEDANE!
+        // (Profit is now only calculated on deletion - "ready to remove")
+        addHistory("Sprzedane", item.name, item);
       } catch { /* skip */ }
     }
   };

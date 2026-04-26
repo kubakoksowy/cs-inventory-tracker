@@ -2296,7 +2296,7 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                     const isMusicKit = weaponName.includes("music kit") || item.type === "Music Kit";
                     const isCharm = weaponName.includes("charm") || weaponName.includes("keychain") || item.type === "Charm";
                     const isGraffiti = weaponName.includes("graffiti") || item.type === "Graffiti";
-                     const isCase = weaponName.includes("case") || weaponName.includes("capsule") || weaponName.includes("container") || weaponName.includes("package") || item.type === "Container" || item.type === "Case";
+                     const isCase = weaponName.includes("case") || weaponName.includes("capsule") || weaponName.includes("container") || weaponName.includes("package") || weaponName.includes("challengers") || weaponName.includes("champions") || weaponName.includes("legends") || weaponName.includes("contenders") || item.type === "Container" || item.type === "Case";
                      const isPin = weaponName.includes("pin") || item.type === "Pin";
                     const isSkin = !isGlove && !isAgent && !isSticker && !isMusicKit && !isCharm && !isGraffiti && !isCase && !isPin;
                     
@@ -2305,9 +2305,12 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                     let variantParam = "";
                     
                       if (isCase) {
-                        itemType = "souvenir-package";
+                        itemType = "tournament-team-sticker-capsule";
                         // Extract map name for souvenir package (e.g. "Cobblestone" from "Cobblestone (ESL One Cologne 2014)")
                         let mapName = weaponName.split("(")[0].trim();
+                        mapName = mapName.replace(/case$/i, "").trim();
+                        mapName = mapName.replace(/challengers/i, "").trim();
+                        mapName = mapName.replace(/^[\s\-]+|[\s\-]+$/g, "");
                         mapName = mapName.replace(/-package$/i, "").trim();
                         // Also handle cases where map name still contains package words
                         if (mapName.toLowerCase().includes("ems-one-2014")) {
@@ -2325,7 +2328,7 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                         if (foundMap && mapNameParts.length > 1) {
                           finalMapName = mapAliases[foundMap] || foundMap;
                         }
-                        pricempireName = finalMapName + "-souvenir-package";
+                        pricempireName = finalMapName;
                         variantParam = finalMapName;
                       } else if (isPin) {
                        itemType = "pin";
@@ -2364,9 +2367,14 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                         pricempireName = "charm-" + weaponName;
                       }
                       variantParam = pricempireName;
-                    } else if (isSticker) {
-                      itemType = "sticker-capsule";
-                    } else if (isGraffiti) {
+                     } else if (isSticker) {
+                       itemType = "sticker";
+                       const stickerBaseName = (variantPart.split("|")[0] || "").trim().toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+                       if (stickerBaseName && stickerBaseName !== "sticker") pricempireName = "sticker-" + stickerBaseName;
+                       const effects = ["glitter", "holo", "gold", "ruby", "sapphire", "black"];
+                       const found = effects.find(e => variantPart.toLowerCase().includes(e));
+                       if (found) variantParam = found;
+                     } else if (isGraffiti) {
                       itemType = "graffiti";
                     } else if (isGlove) {
                       itemType = "glove";

@@ -86,4 +86,3 @@ export async function GET() {
 | Date | Changes |
 |------|---------|
 | Initial | Template created with base setup |
-| 2026-04-26 | Fixed profit calculation: moved from status change (Sprzedane) to deletion (ready to remove) to match user requirement |

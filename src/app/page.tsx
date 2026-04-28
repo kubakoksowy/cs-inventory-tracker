@@ -2382,46 +2382,38 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                         pricempireName = "charm-" + weaponName;
                       }
                       variantParam = pricempireName;
-                     } else if (isSticker) {
-                         const teamStickerKeywords = ["titan","hero","legend","contender","katowice","cologne","atlanta","london","stockholm","rio","major","tyloo","faze","navi","liquid","astralis","complexity","mibr","evil","spirit","g2","vitality","heroic","c9","eg","nrg","sentinels","furia","leviatan","bad","saw","9z","imperial","mouz","grayhound","ly","renegades","inferno","mirage","nuke","train","cache","vertigo","overpass","dust2","krakow"];
-                         const isTeamSticker = teamStickerKeywords.some(kw => variantPart.toLowerCase().includes(kw));
-                         itemType = isTeamSticker ? "tournament-sticker" : "sticker";
-                         let fullName = item.name.toLowerCase();
-                         fullName = fullName.replace(/^sticker\s*\|?\s*/i, "").trim();
-                         fullName = fullName.replace(/\s*\|?\s*field-tested\s*\|?.*$/i, "");
-                         fullName = fullName.replace(/\s*\|?\s*factory-new\s*\|?.*$/i, "");
-                         fullName = fullName.replace(/\s*\|?\s*minimal-wear\s*\|?.*$/i, "");
-                         fullName = fullName.replace(/\s*\|?\s*well-worn\s*\|?.*$/i, "");
-                         fullName = fullName.replace(/\s*\|?\s*battle-scarred\s*\|?.*$/i, "");
-                         let baseName = fullName;
-                         const effects = ["glitter", "holo", "gold", "ruby", "sapphire", "black"];
-                         effects.forEach(eff => {
-                           baseName = baseName.replace(new RegExp(eff, "gi"), "").trim();
-                         });
-                         baseName = baseName.toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-                         if (baseName && baseName !== "sticker") pricempireName = "sticker-" + baseName;
-                         const found = effects.find(eff => variantPart.toLowerCase().includes(eff));
-                         if (found) variantParam = found;
+                      } else if (isSticker) {
+                          const teamStickerKeywords = ["titan","hero","legend","contender","katowice","cologne","atlanta","london","stockholm","rio","major","tyloo","faze","navi","liquid","astralis","complexity","mibr","evil","spirit","g2","vitality","heroic","c9","eg","nrg","sentinels","furia","leviatan","bad","saw","9z","imperial","mouz","grayhound","ly","renegades","inferno","mirage","nuke","train","cache","vertigo","overpass","dust2","krakow"];
+                          const isTeamSticker = teamStickerKeywords.some(kw => variantPart.toLowerCase().includes(kw));
+                          itemType = isTeamSticker ? "tournament-sticker" : "sticker";
+                          const stickerBaseName = (variantPart.split("|")[0] || "").trim().toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+                          if (stickerBaseName && stickerBaseName !== "sticker") pricempireName = "sticker-" + stickerBaseName;
+                          const effects = ["glitter", "holo", "gold", "ruby", "sapphire", "black"];
+                          const found = effects.find(e => variantPart.toLowerCase().includes(e));
+                          // Append effect to name instead of using variant parameter to avoid duplicate/malformed names
+                          if (found && pricempireName) {
+                            pricempireName = pricempireName + "-" + found;
+                          }
                      } else if (isGraffiti) {
                       itemType = "graffiti";
                     } else if (isGlove) {
                       itemType = "glove";
                     }
 
-                    // For skins with statTrak (not music kits)
-                     const useVariantForSkins = isSkin && !isCase && (statTrak || souvenir || wear);
-                     const useVariantForMusic = isMusicKit && statTrak;
-                     const useVariant = useVariantForSkins || useVariantForMusic;
-                    const useFinalPattern = isSkin && finalPattern && !isMusicKit && !isAgent && !isCharm && !isCase && !isPin;
-                    // For music kits: just use stattrak in variant (no wear, no souvenir)
+                     // For skins with statTrak (not music kits)
+                      const useVariantForSkins = isSkin && !isCase && (statTrak || souvenir || wear);
+                      const useVariantForMusic = isMusicKit && statTrak;
+                      const useVariant = useVariantForSkins || useVariantForMusic;
+                     const useFinalPattern = isSkin && finalPattern && !isMusicKit && !isAgent && !isCharm && !isCase && !isPin;
                      // For music kits: just use stattrak in variant (no wear, no souvenir)
-                      const variantQuery = isPin
-                        ? (statTrak ? "?variant=stattrak" : "")
-                        : isMusicKit 
-                        ? (statTrak ? "?variant=stattrak" : "") 
-                        : isCase && variantParam
-                        ? `?variant=${variantParam}`
-                        : (useVariant && !isCase ? `?variant=${statTrak}${souvenir}${wear}` : (variantParam ? `?variant=${variantParam}${wear ? "&wear=" + wear : ""}` : (wear ? `?wear=${wear}` : "")));
+                      // For music kits: just use stattrak in variant (no wear, no souvenir)
+                       const variantQuery = isPin
+                         ? (statTrak ? "?variant=stattrak" : "")
+                         : isMusicKit 
+                         ? (statTrak ? "?variant=stattrak" : "") 
+                         : isCase && variantParam
+                         ? `?variant=${variantParam}`
+                         : (useVariant && !isCase ? `?variant=${statTrak}${souvenir}${wear}` : (variantParam && !isSticker ? `?variant=${variantParam}${wear ? "&wear=" + wear : ""}` : (wear ? `?wear=${wear}` : "")));
 
                     return (
                       <a

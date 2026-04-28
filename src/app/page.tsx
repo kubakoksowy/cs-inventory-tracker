@@ -1389,7 +1389,7 @@ function AppInner() {
   };
 
   // Map CS2 API rarity names to standard rarity names for display
-  const mapRarityName = (rarityName: string): string => {
+   const mapRarityName = (rarityName: string): string => {
     const rarityMap: Record<string, string> = {
       // Character/Agent rarities (from Steam)
       "Distinguished": "Mil-Spec",      // niebieski
@@ -1417,7 +1417,18 @@ function AppInner() {
       "Covert": "Covert",
       "Contraband": "Contraband"
     };
-    return rarityMap[rarityName] || rarityName;
+    // Normalize: trim and check exact match first
+    const normalized = rarityName.trim();
+    if (rarityMap[normalized]) return rarityMap[normalized];
+    // Handle variants like "Mil-Spec Grade" -> "Mil-Spec"
+    if (normalized.toLowerCase().includes("mil-spec")) return "Mil-Spec";
+    if (normalized.toLowerCase().includes("consumer")) return "Consumer";
+    if (normalized.toLowerCase().includes("industrial")) return "Industrial";
+    if (normalized.toLowerCase().includes("restricted")) return "Restricted";
+    if (normalized.toLowerCase().includes("classified")) return "Classified";
+    if (normalized.toLowerCase().includes("covert")) return "Covert";
+    if (normalized.toLowerCase().includes("contraband")) return "Contraband";
+    return rarityName;
   };
 
   const getRarityCol = (rarity: string): string => rarityColors[rarity] || "#b0b0b0";

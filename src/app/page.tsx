@@ -169,7 +169,7 @@ async function fetchAllItemSuggestions(query: string): Promise<BuffSuggestion[]>
 
     // CS2 API endpoints for all item types
     const endpoints = [
-      { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json', type: 'skins' },
+      { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json', type: 'skins' },
       { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/agents.json', type: 'agents' },
       { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/music_kits.json', type: 'music_kits' },
       { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/stickers.json', type: 'stickers' },

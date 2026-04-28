@@ -743,7 +743,8 @@ function AppInner() {
       return data.findIndex(d => d.id === item.id);
     }
     return data.findIndex(d =>
-      d.name === item.name && d.buy === item.buy && d.sell === item.sell &&
+      d.name === item.name && d.wear === item.wear && d.isST === item.isST && d.isSouvenir === item.isSouvenir &&
+      d.buy === item.buy && d.sell === item.sell &&
       d.buyPlace === item.buyPlace && d.sellPlace === item.sellPlace &&
       d.status === item.status && d.tradeBanDate === item.tradeBanDate
     );
@@ -2448,14 +2449,22 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                             setSellMode(prev => ({ ...prev, [item.name]: "price" }));
                             if (sellMode[item.name] === "roi" && item.sell > 0) {
                               const rounded = Math.round(item.sell * 100) / 100;
-                              setData(prev => prev.map(it => it.name === item.name ? { ...it, sell: rounded } : it));
-                              if (user) {
-                                fetch("/api/items", {
-                                  method: "PUT",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ name: item.name, userId: user.id, sell: rounded }),
-                                }).catch(() => {});
-                              }
+                               setData(prev => {
+                                 const idx = findDataIndex(item);
+                                 if (idx !== -1) {
+                                   const updated = [...prev];
+                                   updated[idx] = { ...updated[idx], sell: rounded };
+                                   return updated;
+                                 }
+                                 return prev;
+                               });
+                               if (user) {
+                                 fetch("/api/items", {
+                                   method: "PUT",
+                                   headers: { "Content-Type": "application/json" },
+                                   body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sell: rounded }),
+                                 }).catch(() => {});
+                               }
                             }
                           }}
                         >Price</button>
@@ -2502,13 +2511,20 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                               value={item.sellPlace}
                               onChange={e => {
                                 const newPlace = e.target.value;
-                                setData(prev => prev.map(it => it.name === item.name ? { ...it, sellPlace: newPlace } : it));
-                                if (user) {
-                                  fetch("/api/items", {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ name: item.name, userId: user.id, sellPlace: newPlace }),
-                                  }).catch(() => {});
+                                const idx = findDataIndex(item);
+                                if (idx !== -1) {
+                                  setData(prev => {
+                                    const updated = [...prev];
+                                    updated[idx] = { ...updated[idx], sellPlace: newPlace };
+                                    return updated;
+                                  });
+                                  if (user) {
+                                    fetch("/api/items", {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sellPlace: newPlace }),
+                                    }).catch(() => {});
+                                  }
                                 }
                               }}
                             >
@@ -2534,14 +2550,21 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                                      const sellFee = allMarkets.find(m => m.name === item.sellPlace)?.sellFee || 0;
                                      const netSell = item.buy * (1 + roi / 100);
                                      const newSell = netSell / (1 - sellFee);
-                                    setData(prev => prev.map(it => it.name === item.name ? { ...it, sell: Math.max(0, newSell) } : it));
-                                    if (user) {
-                                      fetch("/api/items", {
-                                        method: "PUT",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ name: item.name, userId: user.id, sell: Math.max(0, newSell) }),
-                                      }).catch(() => {});
-                                    }
+                                     const idx = findDataIndex(item);
+                                     if (idx !== -1) {
+                                       setData(prev => {
+                                         const updated = [...prev];
+                                         updated[idx] = { ...updated[idx], sell: Math.max(0, newSell) };
+                                         return updated;
+                                       });
+                                       if (user) {
+                                         fetch("/api/items", {
+                                           method: "PUT",
+                                           headers: { "Content-Type": "application/json" },
+                                           body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sell: Math.max(0, newSell) }),
+                                         }).catch(() => {});
+                                       }
+                                     }
                                   }
                                 }}
                               />
@@ -2560,13 +2583,20 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                               placeholder="0.00"
                               onChange={e => {
                                 const newSell = Number(e.target.value);
-                                setData(prev => prev.map(it => it.name === item.name ? { ...it, sell: newSell } : it));
-                                if (user) {
-                                  fetch("/api/items", {
-                                    method: "PUT",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ name: item.name, userId: user.id, sell: newSell }),
-                                  }).catch(() => {});
+                                const idx = findDataIndex(item);
+                                if (idx !== -1) {
+                                  setData(prev => {
+                                    const updated = [...prev];
+                                    updated[idx] = { ...updated[idx], sell: newSell };
+                                    return updated;
+                                  });
+                                  if (user) {
+                                    fetch("/api/items", {
+                                      method: "PUT",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sell: newSell }),
+                                    }).catch(() => {});
+                                  }
                                 }
                               }}
                             />

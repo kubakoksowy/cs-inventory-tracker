@@ -2163,7 +2163,7 @@ function AppInner() {
         ) : (
           <div className={`grid ${gridCols === 3 ? "grid-cols-1 sm:grid-cols-3 md:grid-cols-3" : gridCols === 4 ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-4" : "grid-cols-2 sm:grid-cols-5 md:grid-cols-5"} gap-3`}>
             {filteredData.map((item, i) => {
-              const originalIndex = data.findIndex(d => d.id !== undefined ? d.id === item.id : d.name === item.name && d.buy === item.buy && d.sell === item.sell && d.buyPlace === item.buyPlace && d.sellPlace === item.sellPlace && d.status === item.status && d.tradeBanDate === item.tradeBanDate);
+               const originalIndex = data.findIndex(d => d.id !== undefined ? d.id === item.id : d.name === item.name && d.wear === item.wear && d.isST === item.isST && d.isSouvenir === item.isSouvenir && d.buy === item.buy && d.sell === item.sell && d.buyPlace === item.buyPlace && d.sellPlace === item.sellPlace && d.status === item.status && d.tradeBanDate === item.tradeBanDate);
               return (
               <div key={item.id ?? `item-${originalIndex}-${i}`} className={`rounded-lg overflow-hidden card-hover animate-fade-in rarity-${item.rarity || "Mil-Spec"}`} style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
                 {/* Image area */}

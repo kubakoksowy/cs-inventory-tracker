@@ -1913,29 +1913,6 @@ function AppInner() {
                 )}
 
 
-                  {/* Quick wear selection pills */}
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"].map(wearOpt => (
-                      <button
-                        key={wearOpt}
-                        type="button"
-                        className={`text-xs px-2 py-0.5 rounded transition-colors ${
-                          formWear === wearOpt.slice(0, 2) ? "ring-1 ring-cyan-400" : "opacity-60 hover:opacity-100"
-                        }`}
-                        style={{
-                          background: formWear === wearOpt.slice(0, 2) ? "rgba(6,182,212,0.15)" : "var(--bg-elevated)",
-                          border: "1px solid var(--border-color)",
-                          color: "var(--text-secondary)"
-                        }}
-                        onClick={() => setFormWear(wearOpt.slice(0, 2))}
-                      >
-                        {wearOpt}
-                      </button>
-                    ))}
-                  </div>
-                {/* Model suggestions */}
-                {modelSuggestions.length > 0 && skinSuggestions.length === 0 && !selectedSkin && (
-                  <div className="absolute top-full left-0 right-0 z-30 max-h-48 overflow-auto rounded-b-lg shadow-2xl" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-color)", borderTop: "none" }}>
                     <div className="px-3 pt-2 pb-1 text-xs font-medium" style={{ color: "var(--text-muted)" }}>{t.weaponModels}</div>
                     {modelSuggestions.map((m, idx) => (
                       <div

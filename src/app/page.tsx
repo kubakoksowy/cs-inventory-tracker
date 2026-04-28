@@ -191,12 +191,14 @@ async function fetchAllItemSuggestions(query: string): Promise<BuffSuggestion[]>
 
         return data
           .filter((item: any) => {
-            const name = item.name || item.market_hash_name || '';
+            const name = item.market_hash_name || item.name || '';
             const team = item.tournament_team || item.team?.name || '';
             const event = item.tournament_event || item.tournament?.name || '';
             const type = item.type || '';
             const description = item.description || '';
-            const searchText = `${name} ${team} ${event} ${type} ${description}`.toLowerCase();
+            const isSouvenir = item.souvenir ? ' souvenir' : '';
+            const isStatTrak = item.stattrak ? ' stattrack' : '';
+            const searchText = `${name}${isSouvenir}${isStatTrak} ${team} ${event} ${type} ${description}`.toLowerCase();
             // Match all query terms (e.g., "awp neo" matches "AWP | Neo-Noir")
             return queryTerms.every(term => searchText.includes(term));
           })

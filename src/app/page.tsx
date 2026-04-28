@@ -2254,14 +2254,14 @@ let statTrak = "";
                       weaponName = weaponName.replace("stattrak", "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
                     }
                     
-                    let souvenir = "";
-                    if (variantPart.includes("souvenir")) {
-                      souvenir = "esl-one-cologne-2014";
-                      variantPart = variantPart.replace("souvenir", "").trim();
-                    } else if (weaponName.includes("souvenir")) {
-                      souvenir = "esl-one-cologne-2014";
-                      weaponName = weaponName.replace("souvenir", "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
-                    }
+                     let souvenir = "";
+                     if (variantPart.includes("souvenir")) {
+                       souvenir = "souvenir-";
+                       variantPart = variantPart.replace("souvenir", "").trim();
+                     } else if (weaponName.includes("souvenir")) {
+                       souvenir = "souvenir-";
+                       weaponName = weaponName.replace("souvenir", "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+                     }
                     
 const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarred", "well-worn"];
                     let wear = "field-tested";

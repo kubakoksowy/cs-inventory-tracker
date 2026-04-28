@@ -2223,11 +2223,12 @@ function AppInner() {
                   {/* Tags */}
                   <div className="absolute top-3 left-3 flex flex-col gap-1 z-[2]">
                     <div className="flex gap-1">
-                      {(() => {
-                        const r = item.rarity || "Unknown";
-                        const col = getRarityCol(mapRarityName(r));
-                        return <span className="status-badge" style={{ background: `${col}22`, color: col, border: `1px solid ${col}55`, fontSize: "0.7rem", padding: "0.2rem 0.6rem" }}>{r}</span>;
-                      })()}
+                       {(() => {
+                         const r = item.rarity || "Unknown";
+                         const normalizedRarity = mapRarityName(r);
+                         const col = getRarityCol(normalizedRarity);
+                         return <span className="status-badge" style={{ background: `${col}22`, color: col, border: `1px solid ${col}55`, fontSize: "0.7rem", padding: "0.2rem 0.6rem" }}>{normalizedRarity}</span>;
+                       })()}
                       {item.wear && <span className="status-badge" style={{ background: `${getWearColor(item.wear)}15`, color: getWearColor(item.wear), border: `1px solid ${getWearColor(item.wear)}44` }}>{item.wear}</span>}
                     </div>
                     {item.isST && <span className="status-badge" style={{ background: "rgba(249,115,22,0.15)", color: "#f97316", border: "1px solid rgba(249,115,22,0.3)", fontSize: "0.7rem", padding: "0.2rem 0.6rem", width: "fit-content" }}>{t.statTrak}</span>}

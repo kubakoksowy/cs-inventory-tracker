@@ -2624,48 +2624,62 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                     </div>
                   </div>
 
-                  {/* Bottom section */}
-                  <div className="mt-2 pt-2" style={{ borderTop: "1px solid var(--border-color)" }}>
-                    {item.status === "Kupione" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
-                      <div className="flex items-center gap-1 mb-1">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        {editingTB === i ? (
-                          <>
-                            <button
-                              type="button"
-                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                              onClick={() => {
-                                const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
-                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
-                                if (user) {
-                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
-                                }
-                              }}
-                            >-</button>
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
-                              TB: {getCountdown(item.tradeBanEnd)}
-                            </span>
-                            <button
-                              type="button"
-                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                              onClick={() => {
-                                const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
-                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
-                                if (user) {
-                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
-                                }
-                              }}
-                            >+</button>
-                          </>
-                        ) : (
-                          <span className="text-xs cursor-pointer" style={{ color: "#71717a" }} onClick={() => setEditingTB(i)}>TB: {getCountdown(item.tradeBanEnd)}</span>
-                        )}
-                      </div>
-                    )}
+                   {/* Bottom section */}
+                   <div className="mt-2 pt-2" style={{ borderTop: "1px solid var(--border-color)" }}>
+                     {item.status === "Kupione" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
+                       <div className="flex items-center gap-1 mb-1">
+                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                         </svg>
+                         {editingTB === i ? (
+                           <>
+                             <button
+                               type="button"
+                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                               onClick={() => {
+                                 const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
+                                 const idx = findDataIndex(item);
+                                 if (idx !== -1) {
+                                   setData(prev => {
+                                     const updated = [...prev];
+                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
+                                     return updated;
+                                   });
+                                   if (user) {
+                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
+                                   }
+                                 }
+                               }}
+                             >-</button>
+                             <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
+                               TB: {getCountdown(item.tradeBanEnd)}
+                             </span>
+                             <button
+                               type="button"
+                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                               onClick={() => {
+                                 const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
+                                 const idx = findDataIndex(item);
+                                 if (idx !== -1) {
+                                   setData(prev => {
+                                     const updated = [...prev];
+                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
+                                     return updated;
+                                   });
+                                   if (user) {
+                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
+                                   }
+                                 }
+                               }}
+                             >+</button>
+                           </>
+                         ) : (
+                           <span className="text-xs cursor-pointer" style={{ color: "#71717a" }} onClick={() => setEditingTB(i)}>TB: {getCountdown(item.tradeBanEnd)}</span>
+                         )}
+                       </div>
+                     )}
                     {/* Wolne: action buttons */}
                     {item.status === "Wolne" && (
                       <div className="flex gap-2">
@@ -2750,53 +2764,67 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                       </div>
                     )}
 
-                    {/* Sprzedane: show TB info */}
-                    {item.status === "Sprzedane" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
-                      <div className="flex items-center gap-1">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        {editingTB === i ? (
-                          <>
-                            <button
-                              type="button"
-                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                              onClick={() => {
-                                const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
-                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
-                                if (user) {
-                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
-                                }
-                              }}
-                            >-</button>
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
-                              TB: {getCountdown(item.tradeBanEnd)}
-                            </span>
-                            <button
-                              type="button"
-                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                              onClick={() => {
-                                const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
-                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
-                                if (user) {
-                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
-                                }
-                              }}
-                            >+</button>
-                          </>
-                        ) : (
-                          <span 
-                            className="text-xs cursor-pointer hover:text-cyan-400" 
-                            style={{ color: "var(--text-muted)" }}
-                            onClick={() => setEditingTB(i)}
-                          >
-                            TB: {getCountdown(item.tradeBanEnd)}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                     {/* Sprzedane: show TB info */}
+                     {item.status === "Sprzedane" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
+                       <div className="flex items-center gap-1">
+                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                         </svg>
+                         {editingTB === i ? (
+                           <>
+                             <button
+                               type="button"
+                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                               onClick={() => {
+                                 const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
+                                 const idx = findDataIndex(item);
+                                 if (idx !== -1) {
+                                   setData(prev => {
+                                     const updated = [...prev];
+                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
+                                     return updated;
+                                   });
+                                   if (user) {
+                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
+                                   }
+                                 }
+                               }}
+                             >-</button>
+                             <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
+                               TB: {getCountdown(item.tradeBanEnd)}
+                             </span>
+                             <button
+                               type="button"
+                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                               onClick={() => {
+                                 const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
+                                 const idx = findDataIndex(item);
+                                 if (idx !== -1) {
+                                   setData(prev => {
+                                     const updated = [...prev];
+                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
+                                     return updated;
+                                   });
+                                   if (user) {
+                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
+                                   }
+                                 }
+                               }}
+                             >+</button>
+                           </>
+                         ) : (
+                           <span 
+                             className="text-xs cursor-pointer hover:text-cyan-400" 
+                             style={{ color: "var(--text-muted)" }}
+                             onClick={() => setEditingTB(i)}
+                           >
+                             TB: {getCountdown(item.tradeBanEnd)}
+                           </span>
+                         )}
+                       </div>
+                     )}
                     {item.status === "Sprzedane" && item.tradeBanEnd && now.isAfter(item.tradeBanEnd) && (
                       <div className="flex items-center gap-1.5">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

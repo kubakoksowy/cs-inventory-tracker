@@ -679,12 +679,12 @@ function AppInner() {
         }).catch(() => {});
       }
     }
-    setData(prev => [...newItems, ...prev]);
-    addHistory(`Imported ${newItems.length} from Steam`, "Import");
-    setImportPreview([]);
-    setShowImport(false);
-    alert(`Imported ${newItems.length} items`);
-  };
+     setData(prev => [...newItems, ...prev]);
+     // Import does not add to history - only deletion ("Ready to Remove") does
+     setImportPreview([]);
+     setShowImport(false);
+     alert(`Imported ${newItems.length} items`);
+   };
 
   const migrateRarityFromDb = async (items: Item[]) => {
     const updated = [...items];
@@ -807,35 +807,32 @@ function AppInner() {
     }
   };
 
-  // ---------- CHANGE ITEM STATUS ----------
-  const changeItemStatus = async (item: ItemWithCalc, newStatus: string) => {
-    const idx = findDataIndex(item);
-    if (idx === -1) return;
-    addHistory(`${item.status} → ${newStatus}`, item.name, { ...item, status: newStatus });
-    setData(prev => prev.map((it, i) => {
-      if (i !== idx) return it;
-      return { ...it, status: newStatus };
-    }));
-    // Update on server
-    if (user) {
-      try {
-        const updateBody: Record<string, unknown> = { userId: user.id, status: newStatus };
-        if (item.id !== undefined) {
-          updateBody.id = item.id;
-        } else {
-          updateBody.name = item.name;
-        }
-        await fetch("/api/items", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateBody),
-        });
-        // ✅ DODAJ PRZEDMIOT DO HISTORII PRZY ZMIANIE STATUSU NA SPRZEDANE!
-        // (Profit is now only calculated on deletion - "ready to remove")
-        addHistory("Sprzedane", item.name, item);
-      } catch { /* skip */ }
-    }
-  };
+   // ---------- CHANGE ITEM STATUS ----------
+   const changeItemStatus = async (item: ItemWithCalc, newStatus: string) => {
+     const idx = findDataIndex(item);
+     if (idx === -1) return;
+     // Status changes no longer add to history - only deletion ("Ready to Remove") does
+     setData(prev => prev.map((it, i) => {
+       if (i !== idx) return it;
+       return { ...it, status: newStatus };
+     }));
+     // Update on server
+     if (user) {
+       try {
+         const updateBody: Record<string, unknown> = { userId: user.id, status: newStatus };
+         if (item.id !== undefined) {
+           updateBody.id = item.id;
+         } else {
+           updateBody.name = item.name;
+         }
+         await fetch("/api/items", {
+           method: "PUT",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify(updateBody),
+         });
+       } catch { /* skip */ }
+     }
+   };
 
   // ---------- RESET FORMULARZA ----------
   const resetForm = useCallback(() => {
@@ -1259,17 +1256,17 @@ function AppInner() {
       } catch { /* skip */ }
     }
 
-    if (editingIndex !== null) {
-      setData(prev => prev.map((it, idx) => idx === editingIndex ? item : it));
-      addHistory("Updated", fullName, item);
-    } else {
-      setData(prev => [item, ...prev]);
-      addHistory("Added", fullName, item);
-    }
-    resetForm();
-    setShowAdd(false);
-    setEditingIndex(null);
-  };
+     if (editingIndex !== null) {
+       setData(prev => prev.map((it, idx) => idx === editingIndex ? item : it));
+       // Editing existing item - no history entry
+     } else {
+       setData(prev => [item, ...prev]);
+       // Adding new item - no history entry (only deletion creates history)
+     }
+     resetForm();
+     setShowAdd(false);
+     setEditingIndex(null);
+   };
 
   // ---------- FILTRY I SORTOWANIE ----------
   const getItemCategory = (item: ItemWithCalc): number => {
@@ -2908,26 +2905,26 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                 </div>
               </div>
 
-              {/* History - sold items */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t.history} ({history.filter(h => h.action.includes("Sprzedane") && !h.action.includes("Wolne → Sprzedane") && !h.action.includes("Wystawiony → Sprzedane")).length})</p>
-                  {history.filter(h => h.action.includes("Sprzedane") && !h.action.includes("Wolne → Sprzedane") && !h.action.includes("Wystawiony → Sprzedane")).length > 3 && (
-                    <button
-                      type="button"
-                      className="text-xs font-medium px-2 py-1 rounded transition-all"
-                      style={{ color: "#06b6d4" }}
-                      onClick={() => setShowFullHistory(true)}
-                    >
-                      {t.viewAll}
-                    </button>
-                  )}
-                </div>
-                {history.filter(h => h.action.includes("Sprzedane") && !h.action.includes("Wolne → Sprzedane") && !h.action.includes("Wystawiony → Sprzedane")).length === 0 ? (
-                  <p className="text-xs py-4 text-center" style={{ color: "var(--text-muted)" }}>{t.noHistory}</p>
-                ) : (
-                  <div className="flex flex-col gap-1.5 max-h-64 overflow-auto">
-                    {history.filter(h => h.action.includes("Sprzedane") && !h.action.includes("Wolne → Sprzedane") && !h.action.includes("Wystawiony → Sprzedane")).slice(0, 3).map((h, i) => (
+               {/* History - removed items */}
+               <div className="mb-6">
+                 <div className="flex items-center justify-between mb-3">
+                   <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t.history} ({history.filter(h => h.action === t.deleteItem).length})</p>
+                   {history.filter(h => h.action === t.deleteItem).length > 3 && (
+                     <button
+                       type="button"
+                       className="text-xs font-medium px-2 py-1 rounded transition-all"
+                       style={{ color: "#06b6d4" }}
+                       onClick={() => setShowFullHistory(true)}
+                     >
+                       {t.viewAll}
+                     </button>
+                   )}
+                 </div>
+                 {history.filter(h => h.action === t.deleteItem).length === 0 ? (
+                   <p className="text-xs py-4 text-center" style={{ color: "var(--text-muted)" }}>{t.noHistory}</p>
+                 ) : (
+                   <div className="flex flex-col gap-1.5 max-h-64 overflow-auto">
+                     {history.filter(h => h.action === t.deleteItem).slice(0, 3).map((h, i) => (
                       <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-color)" }}>
                         <div className="flex-shrink-0 mt-0.5">
                           <div className="w-2 h-2 rounded-full" style={{ background: "#4ade80" }} />
@@ -3108,14 +3105,14 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                 </div>
               </div>
             ) : (
-              /* History list - only sold items */
-              (() => {
-                const soldHistory = history.filter(h => h.action.includes("Sprzedane") && !h.action.includes("Wolne → Sprzedane") && !h.action.includes("Wystawiony → Sprzedane"));
-                return soldHistory.length === 0 ? (
-                  <p className="text-sm py-8 text-center" style={{ color: "var(--text-muted)" }}>{t.noHistory}</p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {soldHistory.map((h, i) => (
+               /* History list - only deleted items */
+               (() => {
+                 const removedHistory = history.filter(h => h.action === t.deleteItem);
+                 return removedHistory.length === 0 ? (
+                   <p className="text-sm py-8 text-center" style={{ color: "var(--text-muted)" }}>{t.noHistory}</p>
+                 ) : (
+                   <div className="flex flex-col gap-2">
+                     {removedHistory.map((h, i) => (
                       <div
                         key={i}
                         className="flex items-start gap-3 rounded-lg px-4 py-3 cursor-pointer transition-all"

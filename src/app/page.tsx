@@ -317,7 +317,8 @@ function AppInner() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginMode, setLoginMode] = useState<"login" | "register">("login");
   const [rememberMe, setRememberMe] = useState(false);
-  const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
+   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
+   const [deleteTrigger, setDeleteTrigger] = useState<"trash" | "ready" | null>(null);
   const [soldConfirmIndex, setSoldConfirmIndex] = useState<number | null>(null);
   const [sellMode, setSellMode] = useState<Record<string, "price" | "roi">>({});
   const [roiInputs, setRoiInputs] = useState<Record<string, string>>({});
@@ -750,9 +751,12 @@ function AppInner() {
     );
   };
 
-   const deleteItem = async (item: ItemWithCalc) => {
+   const deleteItem = async (item: ItemWithCalc, logToHistory: boolean = false) => {
      const idx = findDataIndex(item);
      if (idx !== -1) {
+       if (logToHistory) {
+         addHistory(t.deleteItem, item.name, item);
+       }
        // Update stats if item was sold or had investment
       if (user && (item.status === "Sprzedane" || item.buy > 0)) {
         try {
@@ -2178,7 +2182,7 @@ function AppInner() {
                       border: `1px solid ${deleteConfirmIndex === i ? "rgba(239,68,68,0.5)" : "rgba(239,68,68,0.3)"}`,
                       color: "#f87171"
                     }}
-                    onClick={() => setDeleteConfirmIndex(deleteConfirmIndex === i ? null : i)}
+                     onClick={() => { setDeleteTrigger('trash'); setDeleteConfirmIndex(deleteConfirmIndex === i ? null : i); }}
                     title={t.deleteItem}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2196,7 +2200,7 @@ function AppInner() {
                           type="button"
                           className="text-xs px-4 py-1.5 rounded font-medium transition-all"
                           style={{ background: "rgba(239,68,68,0.2)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171" }}
-                          onClick={() => { deleteItem(item); setDeleteConfirmIndex(null); }}
+                           onClick={() => { deleteItem(item, deleteTrigger === 'ready'); setDeleteConfirmIndex(null); setDeleteTrigger(null); }}
                         >
                           {t.delete}
                         </button>
@@ -2825,7 +2829,7 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12"/>
                         </svg>
-                        <button type="button" className="text-xs inline-flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity" style={{ color: "#4ade80" }} onClick={() => setDeleteConfirmIndex(deleteConfirmIndex === i ? null : i)} title={t.deleteItem}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{t.readyToRemove}</button>
+                         <button type="button" className="text-xs inline-flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity" style={{ color: "#4ade80" }} onClick={() => { setDeleteTrigger('ready'); setDeleteConfirmIndex(deleteConfirmIndex === i ? null : i); }} title={t.deleteItem}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{t.readyToRemove}</button>
                       </div>
                     )}
                   </div>

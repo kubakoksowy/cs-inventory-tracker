@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import skinsData from "@/data/skins.json";
 
 interface SkinRaw {
   n: string;
@@ -16,7 +15,8 @@ interface SkinRaw {
   ph: string | null;
 }
 
-const skins = skinsData as SkinRaw[];
+// In-memory cache to avoid fetching on every request (Vercel edge may persist)
+let cachedSkins: SkinRaw[] | null = null;
 
 const gammaDopplerPhases = [
   { label: "Phase 1", color: "#22c55e" },
@@ -53,6 +53,32 @@ export async function GET(req: NextRequest) {
     dopplerPhase: string | null;
   }[] = [];
   const seenNames = new Set<string>();
+
+  // Lazy-load and cache skins data from ByMykel API (skins_not_grouped includes wear variants)
+  let skins = cachedSkins;
+  if (!skins) {
+    try {
+      const remoteRes = await fetch("https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json");
+      const remoteData: any[] = await remoteRes.json();
+      skins = remoteData.map((s: any) => ({
+        n: s.name || s.market_hash_name || "",
+        mh: s.market_hash_name || s.name || "",
+        u: s.icon_url || "",
+        r: s.rarity || "",
+        c: s.rarity_color || "",
+        w: s.wear || "",
+        cat: s.type || "",
+        we: s.weapon_type || "",
+        st: !!s.stattrak,
+        su: !!s.souvenir,
+        pi: s.pattern_index ?? null,
+        ph: s.doppler_phase || null,
+      })) as SkinRaw[];
+      cachedSkins = skins;
+    } catch {
+      skins = [];
+    }
+  }
 
   for (const skin of skins) {
     if (suggestions.length >= 20) break;

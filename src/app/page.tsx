@@ -227,17 +227,40 @@ async function fetchAllItemSuggestions(query: string): Promise<BuffSuggestion[]>
       return a.name.localeCompare(b.name);
     });
 
-    // Remove duplicates and limit total results
-    const seen = new Set<string>();
-    for (const item of allItems) {
-      if (!seen.has(item.name) && suggestions.length < 20) {
-        seen.add(item.name);
-        suggestions.push(item);
+     // Remove duplicates and limit total results
+     const seen = new Set<string>();
+     const expandedItems: BuffSuggestion[] = [];
+     
+     // Expand Doppler items with all phases
+     for (const item of allItems) {
+       const itemName = item.name.toLowerCase();
+       const isDoppler = itemName.includes("doppler");
+       const isGamma = itemName.includes("gamma doppler");
+       
+       if (isDoppler && !/(phase \d+|ruby|sapphire|emerald|black pearl)/i.test(item.name)) {
+         // This is a base Doppler skin without phase - expand to all phases
+         const phases = isGamma ? gammaDopplerPhases : dopplerPhases;
+         for (const phase of phases) {
+           const phasedName = `${item.name} (${phase.label})`;
+           if (!seen.has(phasedName) && expandedItems.length < 20) {
+             seen.add(phasedName);
+             expandedItems.push({
+               name: phasedName,
+               iconUrl: item.iconUrl,
+               rarity: item.rarity,
+               rarityColor: phase.color,
+               dopplerPhase: phase.label
+             });
+           }
+         }
+       } else if (!seen.has(item.name) && expandedItems.length < 20) {
+         seen.add(item.name);
+         expandedItems.push(item);
+       }
       }
-    }
 
-    return suggestions;
-  } catch {
+     return expandedItems;
+   } catch {
     // Fallback to old Buff API
     return fetchBuffSuggestions(query);
   }

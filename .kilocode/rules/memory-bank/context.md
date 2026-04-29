@@ -14,7 +14,8 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] Memory bank documentation
 - [x] Recipe system for common features
 - [x] Converted "Ready to remove" text into a functional button that triggers item deletion when trade ban expires
-- [x] Fixed profit calculation to only count after "ready to remove" (deletion)
+ - [x] Fixed profit calculation to only count after "ready to remove" (deletion)
+ - [x] Removed history logging from delete button (trash) to prevent unwanted history entries
 
 ## Current Structure
 
@@ -85,4 +86,5 @@ export async function GET() {
 
 | Date | Changes |
 |------|---------|
-| Initial | Template created with base setup |
+ | Initial | Template created with base setup |
+ | 2026-04-29 | Removed history logging from delete button (trash) |

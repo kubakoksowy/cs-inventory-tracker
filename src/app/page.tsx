@@ -750,12 +750,10 @@ function AppInner() {
     );
   };
 
-  const deleteItem = async (item: ItemWithCalc) => {
-    const idx = findDataIndex(item);
-    if (idx !== -1) {
-      addHistory(t.deleteItem, item.name, item);
-      
-      // Update stats if item was sold or had investment
+   const deleteItem = async (item: ItemWithCalc) => {
+     const idx = findDataIndex(item);
+     if (idx !== -1) {
+       // Update stats if item was sold or had investment
       if (user && (item.status === "Sprzedane" || item.buy > 0)) {
         try {
           const profit = item.sell - item.buy;

@@ -169,7 +169,7 @@ async function fetchAllItemSuggestions(query: string): Promise<BuffSuggestion[]>
 
     // CS2 API endpoints for all item types
     const endpoints = [
-      { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins_not_grouped.json', type: 'skins' },
+      { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/skins.json', type: 'skins' },
       { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/agents.json', type: 'agents' },
       { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/music_kits.json', type: 'music_kits' },
       { url: 'https://raw.githubusercontent.com/ByMykel/CSGO-API/main/public/api/en/stickers.json', type: 'stickers' },
@@ -191,14 +191,12 @@ async function fetchAllItemSuggestions(query: string): Promise<BuffSuggestion[]>
 
         return data
           .filter((item: any) => {
-            const name = item.market_hash_name || item.name || '';
+            const name = item.name || item.market_hash_name || '';
             const team = item.tournament_team || item.team?.name || '';
             const event = item.tournament_event || item.tournament?.name || '';
             const type = item.type || '';
             const description = item.description || '';
-            const isSouvenir = item.souvenir ? ' souvenir' : '';
-            const isStatTrak = item.stattrak ? ' stattrack' : '';
-            const searchText = `${name}${isSouvenir}${isStatTrak} ${team} ${event} ${type} ${description}`.toLowerCase();
+            const searchText = `${name} ${team} ${event} ${type} ${description}`.toLowerCase();
             // Match all query terms (e.g., "awp neo" matches "AWP | Neo-Noir")
             return queryTerms.every(term => searchText.includes(term));
           })
@@ -743,8 +741,7 @@ function AppInner() {
       return data.findIndex(d => d.id === item.id);
     }
     return data.findIndex(d =>
-      d.name === item.name && d.wear === item.wear && d.isST === item.isST && d.isSouvenir === item.isSouvenir &&
-      d.buy === item.buy && d.sell === item.sell &&
+      d.name === item.name && d.buy === item.buy && d.sell === item.sell &&
       d.buyPlace === item.buyPlace && d.sellPlace === item.sellPlace &&
       d.status === item.status && d.tradeBanDate === item.tradeBanDate
     );
@@ -1390,7 +1387,7 @@ function AppInner() {
   };
 
   // Map CS2 API rarity names to standard rarity names for display
-   const mapRarityName = (rarityName: string): string => {
+  const mapRarityName = (rarityName: string): string => {
     const rarityMap: Record<string, string> = {
       // Character/Agent rarities (from Steam)
       "Distinguished": "Mil-Spec",      // niebieski
@@ -1418,18 +1415,7 @@ function AppInner() {
       "Covert": "Covert",
       "Contraband": "Contraband"
     };
-    // Normalize: trim and check exact match first
-    const normalized = rarityName.trim();
-    if (rarityMap[normalized]) return rarityMap[normalized];
-    // Handle variants like "Mil-Spec Grade" -> "Mil-Spec"
-    if (normalized.toLowerCase().includes("mil-spec")) return "Mil-Spec";
-    if (normalized.toLowerCase().includes("consumer")) return "Consumer";
-    if (normalized.toLowerCase().includes("industrial")) return "Industrial";
-    if (normalized.toLowerCase().includes("restricted")) return "Restricted";
-    if (normalized.toLowerCase().includes("classified")) return "Classified";
-    if (normalized.toLowerCase().includes("covert")) return "Covert";
-    if (normalized.toLowerCase().includes("contraband")) return "Contraband";
-    return rarityName;
+    return rarityMap[rarityName] || rarityName;
   };
 
   const getRarityCol = (rarity: string): string => rarityColors[rarity] || "#b0b0b0";
@@ -2163,7 +2149,7 @@ function AppInner() {
         ) : (
           <div className={`grid ${gridCols === 3 ? "grid-cols-1 sm:grid-cols-3 md:grid-cols-3" : gridCols === 4 ? "grid-cols-2 sm:grid-cols-4 md:grid-cols-4" : "grid-cols-2 sm:grid-cols-5 md:grid-cols-5"} gap-3`}>
             {filteredData.map((item, i) => {
-               const originalIndex = data.findIndex(d => d.id !== undefined ? d.id === item.id : d.name === item.name && d.wear === item.wear && d.isST === item.isST && d.isSouvenir === item.isSouvenir && d.buy === item.buy && d.sell === item.sell && d.buyPlace === item.buyPlace && d.sellPlace === item.sellPlace && d.status === item.status && d.tradeBanDate === item.tradeBanDate);
+              const originalIndex = data.findIndex(d => d.id !== undefined ? d.id === item.id : d.name === item.name && d.buy === item.buy && d.sell === item.sell && d.buyPlace === item.buyPlace && d.sellPlace === item.sellPlace && d.status === item.status && d.tradeBanDate === item.tradeBanDate);
               return (
               <div key={item.id ?? `item-${originalIndex}-${i}`} className={`rounded-lg overflow-hidden card-hover animate-fade-in rarity-${item.rarity || "Mil-Spec"}`} style={{ background: "var(--bg-card)", border: "1px solid var(--border-color)" }}>
                 {/* Image area */}
@@ -2224,12 +2210,11 @@ function AppInner() {
                   {/* Tags */}
                   <div className="absolute top-3 left-3 flex flex-col gap-1 z-[2]">
                     <div className="flex gap-1">
-                       {(() => {
-                         const r = item.rarity || "Unknown";
-                         const normalizedRarity = mapRarityName(r);
-                         const col = getRarityCol(normalizedRarity);
-                         return <span className="status-badge" style={{ background: `${col}22`, color: col, border: `1px solid ${col}55`, fontSize: "0.7rem", padding: "0.2rem 0.6rem" }}>{normalizedRarity}</span>;
-                       })()}
+                      {(() => {
+                        const r = item.rarity || "Unknown";
+                        const col = getRarityCol(mapRarityName(r));
+                        return <span className="status-badge" style={{ background: `${col}22`, color: col, border: `1px solid ${col}55`, fontSize: "0.7rem", padding: "0.2rem 0.6rem" }}>{r}</span>;
+                      })()}
                       {item.wear && <span className="status-badge" style={{ background: `${getWearColor(item.wear)}15`, color: getWearColor(item.wear), border: `1px solid ${getWearColor(item.wear)}44` }}>{item.wear}</span>}
                     </div>
                     {item.isST && <span className="status-badge" style={{ background: "rgba(249,115,22,0.15)", color: "#f97316", border: "1px solid rgba(249,115,22,0.3)", fontSize: "0.7rem", padding: "0.2rem 0.6rem", width: "fit-content" }}>{t.statTrak}</span>}
@@ -2243,12 +2228,7 @@ function AppInner() {
                   {(() => {
                     const parts = item.name.split(" | ");
                     let weaponName = parts[0].toLowerCase().replace(/ /g, "-").replace(/™/g, "").replace(/★/g, "").replace(/-+/g, "-").replace(/^-+|-+$/g, "").replace(/[^\x00-\x7F]/g, "").trim();
-                     let variantPart = "";
-                     if (parts.length > 2 && parts[0].toLowerCase().includes("sticker")) {
-                       variantPart = parts.slice(1, -1).join(" | ").toLowerCase();
-                     } else {
-                       variantPart = (parts[1] || "field-tested").toLowerCase();
-                     }
+                    let variantPart = (parts[1] || "field-tested").toLowerCase();
                     variantPart = variantPart.replace("(", "").replace(")", "").replace(/™/g, "").trim();
                     
                     if (weaponName.includes("\u2764") || weaponName.includes("\ufe0f")) {
@@ -2267,14 +2247,14 @@ let statTrak = "";
                       weaponName = weaponName.replace("stattrak", "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
                     }
                     
-                     let souvenir = "";
-                     if (variantPart.includes("souvenir")) {
-                       souvenir = "souvenir-";
-                       variantPart = variantPart.replace("souvenir", "").trim();
-                     } else if (weaponName.includes("souvenir")) {
-                       souvenir = "souvenir-";
-                       weaponName = weaponName.replace("souvenir", "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
-                     }
+                    let souvenir = "";
+                    if (variantPart.includes("souvenir")) {
+                      souvenir = "esl-one-cologne-2014";
+                      variantPart = variantPart.replace("souvenir", "").trim();
+                    } else if (weaponName.includes("souvenir")) {
+                      souvenir = "esl-one-cologne-2014";
+                      weaponName = weaponName.replace("souvenir", "").replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+                    }
                     
 const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarred", "well-worn"];
                     let wear = "field-tested";
@@ -2316,7 +2296,7 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                     const isMusicKit = weaponName.includes("music kit") || item.type === "Music Kit";
                     const isCharm = weaponName.includes("charm") || weaponName.includes("keychain") || item.type === "Charm";
                     const isGraffiti = weaponName.includes("graffiti") || item.type === "Graffiti";
-                     const isCase = weaponName.includes("case") || weaponName.includes("capsule") || weaponName.includes("container") || weaponName.includes("package") || weaponName.includes("challengers") || weaponName.includes("champions") || weaponName.includes("legends") || weaponName.includes("contenders") || item.type === "Container" || item.type === "Case";
+                     const isCase = weaponName.includes("case") || weaponName.includes("capsule") || weaponName.includes("container") || weaponName.includes("package") || item.type === "Container" || item.type === "Case";
                      const isPin = weaponName.includes("pin") || item.type === "Pin";
                     const isSkin = !isGlove && !isAgent && !isSticker && !isMusicKit && !isCharm && !isGraffiti && !isCase && !isPin;
                     
@@ -2325,12 +2305,9 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                     let variantParam = "";
                     
                       if (isCase) {
-                        itemType = "tournament-team-sticker-capsule";
+                        itemType = "souvenir-package";
                         // Extract map name for souvenir package (e.g. "Cobblestone" from "Cobblestone (ESL One Cologne 2014)")
                         let mapName = weaponName.split("(")[0].trim();
-                        mapName = mapName.replace(/case$/i, "").trim();
-                        mapName = mapName.replace(/challengers/i, "").trim();
-                        mapName = mapName.replace(/^[\s\-]+|[\s\-]+$/g, "");
                         mapName = mapName.replace(/-package$/i, "").trim();
                         // Also handle cases where map name still contains package words
                         if (mapName.toLowerCase().includes("ems-one-2014")) {
@@ -2348,7 +2325,7 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                         if (foundMap && mapNameParts.length > 1) {
                           finalMapName = mapAliases[foundMap] || foundMap;
                         }
-                        pricempireName = finalMapName;
+                        pricempireName = finalMapName + "-souvenir-package";
                         variantParam = finalMapName;
                       } else if (isPin) {
                        itemType = "pin";
@@ -2387,22 +2364,9 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                         pricempireName = "charm-" + weaponName;
                       }
                       variantParam = pricempireName;
-                     } else if (isSticker) {
-                         const teamStickerKeywords = ["titan","hero","legend","contender","katowice","cologne","atlanta","london","stockholm","rio","major","tyloo","faze","navi","liquid","astralis","complexity","mibr","evil","spirit","g2","vitality","heroic","c9","eg","nrg","sentinels","furia","leviatan","bad","saw","9z","imperial","mouz","grayhound","ly","renegades","inferno","mirage","nuke","train","cache","vertigo","overpass","dust2","krakow"];
-                         const isTeamSticker = teamStickerKeywords.some(kw => variantPart.toLowerCase().includes(kw));
-                         itemType = isTeamSticker ? "tournament-sticker" : "sticker";
-                         let fullName = item.name.toLowerCase();
-                         fullName = fullName.replace(/^sticker\s*\|?\s*/i, "").trim();
-                         let baseName = fullName;
-                         const effects = ["glitter", "holo", "gold", "ruby", "sapphire", "black"];
-                         effects.forEach(eff => {
-                           baseName = baseName.replace(new RegExp(eff, "gi"), "").trim();
-                         });
-                         baseName = baseName.toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
-                         if (baseName && baseName !== "sticker") pricempireName = "sticker-" + baseName;
-                         const found = effects.find(eff => variantPart.toLowerCase().includes(eff));
-                         if (found) variantParam = found;
-                     } else if (isGraffiti) {
+                    } else if (isSticker) {
+                      itemType = "sticker-capsule";
+                    } else if (isGraffiti) {
                       itemType = "graffiti";
                     } else if (isGlove) {
                       itemType = "glove";
@@ -2449,22 +2413,14 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                             setSellMode(prev => ({ ...prev, [item.name]: "price" }));
                             if (sellMode[item.name] === "roi" && item.sell > 0) {
                               const rounded = Math.round(item.sell * 100) / 100;
-                               setData(prev => {
-                                 const idx = findDataIndex(item);
-                                 if (idx !== -1) {
-                                   const updated = [...prev];
-                                   updated[idx] = { ...updated[idx], sell: rounded };
-                                   return updated;
-                                 }
-                                 return prev;
-                               });
-                               if (user) {
-                                 fetch("/api/items", {
-                                   method: "PUT",
-                                   headers: { "Content-Type": "application/json" },
-                                   body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sell: rounded }),
-                                 }).catch(() => {});
-                               }
+                              setData(prev => prev.map(it => it.name === item.name ? { ...it, sell: rounded } : it));
+                              if (user) {
+                                fetch("/api/items", {
+                                  method: "PUT",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ name: item.name, userId: user.id, sell: rounded }),
+                                }).catch(() => {});
+                              }
                             }
                           }}
                         >Price</button>
@@ -2511,20 +2467,13 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                               value={item.sellPlace}
                               onChange={e => {
                                 const newPlace = e.target.value;
-                                const idx = findDataIndex(item);
-                                if (idx !== -1) {
-                                  setData(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], sellPlace: newPlace };
-                                    return updated;
-                                  });
-                                  if (user) {
-                                    fetch("/api/items", {
-                                      method: "PUT",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sellPlace: newPlace }),
-                                    }).catch(() => {});
-                                  }
+                                setData(prev => prev.map(it => it.name === item.name ? { ...it, sellPlace: newPlace } : it));
+                                if (user) {
+                                  fetch("/api/items", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ name: item.name, userId: user.id, sellPlace: newPlace }),
+                                  }).catch(() => {});
                                 }
                               }}
                             >
@@ -2550,21 +2499,14 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                                      const sellFee = allMarkets.find(m => m.name === item.sellPlace)?.sellFee || 0;
                                      const netSell = item.buy * (1 + roi / 100);
                                      const newSell = netSell / (1 - sellFee);
-                                     const idx = findDataIndex(item);
-                                     if (idx !== -1) {
-                                       setData(prev => {
-                                         const updated = [...prev];
-                                         updated[idx] = { ...updated[idx], sell: Math.max(0, newSell) };
-                                         return updated;
-                                       });
-                                       if (user) {
-                                         fetch("/api/items", {
-                                           method: "PUT",
-                                           headers: { "Content-Type": "application/json" },
-                                           body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sell: Math.max(0, newSell) }),
-                                         }).catch(() => {});
-                                       }
-                                     }
+                                    setData(prev => prev.map(it => it.name === item.name ? { ...it, sell: Math.max(0, newSell) } : it));
+                                    if (user) {
+                                      fetch("/api/items", {
+                                        method: "PUT",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ name: item.name, userId: user.id, sell: Math.max(0, newSell) }),
+                                      }).catch(() => {});
+                                    }
                                   }
                                 }}
                               />
@@ -2583,20 +2525,13 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                               placeholder="0.00"
                               onChange={e => {
                                 const newSell = Number(e.target.value);
-                                const idx = findDataIndex(item);
-                                if (idx !== -1) {
-                                  setData(prev => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], sell: newSell };
-                                    return updated;
-                                  });
-                                  if (user) {
-                                    fetch("/api/items", {
-                                      method: "PUT",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ ...(item.id !== undefined ? { id: item.id } : { name: item.name }), userId: user.id, sell: newSell }),
-                                    }).catch(() => {});
-                                  }
+                                setData(prev => prev.map(it => it.name === item.name ? { ...it, sell: newSell } : it));
+                                if (user) {
+                                  fetch("/api/items", {
+                                    method: "PUT",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ name: item.name, userId: user.id, sell: newSell }),
+                                  }).catch(() => {});
                                 }
                               }}
                             />
@@ -2624,62 +2559,48 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                     </div>
                   </div>
 
-                   {/* Bottom section */}
-                   <div className="mt-2 pt-2" style={{ borderTop: "1px solid var(--border-color)" }}>
-                     {item.status === "Kupione" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
-                       <div className="flex items-center gap-1 mb-1">
-                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                         </svg>
-                         {editingTB === i ? (
-                           <>
-                             <button
-                               type="button"
-                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                               onClick={() => {
-                                 const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
-                                 const idx = findDataIndex(item);
-                                 if (idx !== -1) {
-                                   setData(prev => {
-                                     const updated = [...prev];
-                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
-                                     return updated;
-                                   });
-                                   if (user) {
-                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
-                                   }
-                                 }
-                               }}
-                             >-</button>
-                             <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
-                               TB: {getCountdown(item.tradeBanEnd)}
-                             </span>
-                             <button
-                               type="button"
-                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                               onClick={() => {
-                                 const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
-                                 const idx = findDataIndex(item);
-                                 if (idx !== -1) {
-                                   setData(prev => {
-                                     const updated = [...prev];
-                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
-                                     return updated;
-                                   });
-                                   if (user) {
-                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
-                                   }
-                                 }
-                               }}
-                             >+</button>
-                           </>
-                         ) : (
-                           <span className="text-xs cursor-pointer" style={{ color: "#71717a" }} onClick={() => setEditingTB(i)}>TB: {getCountdown(item.tradeBanEnd)}</span>
-                         )}
-                       </div>
-                     )}
+                  {/* Bottom section */}
+                  <div className="mt-2 pt-2" style={{ borderTop: "1px solid var(--border-color)" }}>
+                    {item.status === "Kupione" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
+                      <div className="flex items-center gap-1 mb-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        {editingTB === i ? (
+                          <>
+                            <button
+                              type="button"
+                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                              onClick={() => {
+                                const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
+                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
+                                if (user) {
+                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
+                                }
+                              }}
+                            >-</button>
+                            <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
+                              TB: {getCountdown(item.tradeBanEnd)}
+                            </span>
+                            <button
+                              type="button"
+                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                              onClick={() => {
+                                const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
+                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
+                                if (user) {
+                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
+                                }
+                              }}
+                            >+</button>
+                          </>
+                        ) : (
+                          <span className="text-xs cursor-pointer" style={{ color: "#71717a" }} onClick={() => setEditingTB(i)}>TB: {getCountdown(item.tradeBanEnd)}</span>
+                        )}
+                      </div>
+                    )}
                     {/* Wolne: action buttons */}
                     {item.status === "Wolne" && (
                       <div className="flex gap-2">
@@ -2764,67 +2685,53 @@ const wearTypes = ["factory-new", "field-tested", "minimal-wear", "battle-scarre
                       </div>
                     )}
 
-                     {/* Sprzedane: show TB info */}
-                     {item.status === "Sprzedane" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
-                       <div className="flex items-center gap-1">
-                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                           <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                         </svg>
-                         {editingTB === i ? (
-                           <>
-                             <button
-                               type="button"
-                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                               onClick={() => {
-                                 const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
-                                 const idx = findDataIndex(item);
-                                 if (idx !== -1) {
-                                   setData(prev => {
-                                     const updated = [...prev];
-                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
-                                     return updated;
-                                   });
-                                   if (user) {
-                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
-                                   }
-                                 }
-                               }}
-                             >-</button>
-                             <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
-                               TB: {getCountdown(item.tradeBanEnd)}
-                             </span>
-                             <button
-                               type="button"
-                               className="w-5 h-5 rounded flex items-center justify-center text-xs"
-                               style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
-                               onClick={() => {
-                                 const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
-                                 const idx = findDataIndex(item);
-                                 if (idx !== -1) {
-                                   setData(prev => {
-                                     const updated = [...prev];
-                                     updated[idx] = { ...updated[idx], tradeBanDate: newDate };
-                                     return updated;
-                                   });
-                                   if (user) {
-                                     fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, ...(item.id !== undefined ? { id: item.id } : { name: item.name }), tradeBanDate: newDate }) });
-                                   }
-                                 }
-                               }}
-                             >+</button>
-                           </>
-                         ) : (
-                           <span 
-                             className="text-xs cursor-pointer hover:text-cyan-400" 
-                             style={{ color: "var(--text-muted)" }}
-                             onClick={() => setEditingTB(i)}
-                           >
-                             TB: {getCountdown(item.tradeBanEnd)}
-                           </span>
-                         )}
-                       </div>
-                     )}
+                    {/* Sprzedane: show TB info */}
+                    {item.status === "Sprzedane" && item.tradeBanEnd && !now.isAfter(item.tradeBanEnd) && (
+                      <div className="flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#71717a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        {editingTB === i ? (
+                          <>
+                            <button
+                              type="button"
+                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                              onClick={() => {
+                                const newDate = dayjs(item.tradeBanDate).subtract(1, "day").toISOString();
+                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
+                                if (user) {
+                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
+                                }
+                              }}
+                            >-</button>
+                            <span className="text-xs" style={{ color: "var(--text-muted)" }} onClick={() => setEditingTB(null)}>
+                              TB: {getCountdown(item.tradeBanEnd)}
+                            </span>
+                            <button
+                              type="button"
+                              className="w-5 h-5 rounded flex items-center justify-center text-xs"
+                              style={{ background: "rgba(255,255,255,0.1)", color: "var(--text-muted)" }}
+                              onClick={() => {
+                                const newDate = dayjs(item.tradeBanDate).add(1, "day").toISOString();
+                                setData(prev => prev.map(it => it.id === item.id ? { ...it, tradeBanDate: newDate } : it));
+                                if (user) {
+                                  fetch("/api/items", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ userId: user.id, id: item.id, name: item.name, tradeBanDate: newDate }) });
+                                }
+                              }}
+                            >+</button>
+                          </>
+                        ) : (
+                          <span 
+                            className="text-xs cursor-pointer hover:text-cyan-400" 
+                            style={{ color: "var(--text-muted)" }}
+                            onClick={() => setEditingTB(i)}
+                          >
+                            TB: {getCountdown(item.tradeBanEnd)}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {item.status === "Sprzedane" && item.tradeBanEnd && now.isAfter(item.tradeBanEnd) && (
                       <div className="flex items-center gap-1.5">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

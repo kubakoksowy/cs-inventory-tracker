@@ -801,11 +801,11 @@ function AppInner() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ userId: user.id, field: "totalInvested", amount: -item.buy }),
             });
-            await fetch("/api/stats", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: user.id, field: "totalProfitSold", amount: profit < 0 ? Math.abs(profit) : +profit }),
-            });
+             await fetch("/api/stats", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ userId: user.id, field: "totalProfitSold", amount: profit }),
+             });
           } else if (item.buy > 0) {
             // If not sold, just remove the investment
             await fetch("/api/stats", {

@@ -781,39 +781,42 @@ function AppInner() {
          addHistory(t.deleteItem, item.name, item);
        }
        // Update stats if item was sold or had investment
-      if (user && (item.status === "Sprzedane" || item.buy > 0)) {
-        try {
-          const profit = item.sell - item.buy;
-          await fetch("/api/stats", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: user.id, field: "totalItemsAdded", amount: -1 }),
-          });
-          if (item.status === "Sprzedane") {
-            // ✅ Now profit is only added on deletion ("ready to remove")
-            await fetch("/api/stats", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: user.id, field: "totalSold", amount: 1 }),
-            });
-            await fetch("/api/stats", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: user.id, field: "totalInvested", amount: -item.buy }),
-            });
+       if (user && (item.status === "Sprzedane" || item.buy > 0)) {
+         try {
+           // Calculate net profit including market fees
+           const buyFee = markets.find(m => m.name === item.buyPlace)?.buyFee || 0;
+           const sellFee = markets.find(m => m.name === item.sellPlace)?.sellFee || 0;
+           const netBuy = item.buy * (1 + buyFee);
+           const netSell = item.sell * (1 - sellFee);
+           const profit = netSell - netBuy;
+           await fetch("/api/stats", {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({ userId: user.id, field: "totalItemsAdded", amount: -1 }),
+           });
+           if (item.status === "Sprzedane") {
+             await fetch("/api/stats", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ userId: user.id, field: "totalSold", amount: 1 }),
+             });
+             await fetch("/api/stats", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ userId: user.id, field: "totalInvested", amount: -netBuy }),
+             });
              await fetch("/api/stats", {
                method: "POST",
                headers: { "Content-Type": "application/json" },
                body: JSON.stringify({ userId: user.id, field: "totalProfitSold", amount: profit }),
              });
-          } else if (item.buy > 0) {
-            // If not sold, just remove the investment
-            await fetch("/api/stats", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ userId: user.id, field: "totalInvested", amount: -item.buy }),
-            });
-          }
+           } else if (item.buy > 0) {
+             await fetch("/api/stats", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ userId: user.id, field: "totalInvested", amount: -netBuy }),
+             });
+           }
           const statsRes = await fetch(`/api/stats?userId=${user.id}`);
           const statsJson = await statsRes.json() as { stats?: { totalItemsAdded: number; totalInvested: number; totalProfitSold: number; totalSold: number } };
           if (statsJson.stats) setCumulativeStats(statsJson.stats);

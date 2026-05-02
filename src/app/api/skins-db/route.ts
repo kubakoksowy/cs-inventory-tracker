@@ -91,35 +91,39 @@ export async function GET(req: NextRequest) {
       phaseNames = " " + phases.map(p => p.label.toLowerCase()).join(" ");
     }
     const searchable = `${skin.n} ${skin.mh} ${skin.w}${phase}${phaseNames}`.toLowerCase().replace(/[|™★]/g, "");
-    if (queryTerms.every(term => searchable.includes(term))) {
-      // If skin has no phase but is a doppler/gamma doppler, generate phase entries
-      if (!skin.ph && skin.n.toLowerCase().includes("doppler")) {
-        const isGamma = skin.n.toLowerCase().includes("gamma");
-        const phases = isGamma ? gammaDopplerPhases : dopplerPhases;
-        for (const p of phases) {
-          const phaseName = `${skin.mh} (${p.label})`;
-          if (!seenNames.has(phaseName)) {
-            seenNames.add(phaseName);
-            suggestions.push({
-              name: phaseName,
-              iconUrl: skin.u,
-              rarity: skin.r,
-              rarityColor: skin.c,
-              dopplerPhase: p.label,
-            });
-          }
-        }
-      } else if (!seenNames.has(skin.mh)) {
-        seenNames.add(skin.mh);
-        suggestions.push({
-          name: skin.mh,
-          iconUrl: skin.u,
-          rarity: skin.r,
-          rarityColor: skin.c,
-          dopplerPhase: skin.ph,
-        });
-      }
-    }
+     if (queryTerms.every(term => searchable.includes(term))) {
+       // If skin has no phase but is a doppler/gamma doppler, generate phase entries
+       if (!skin.ph && skin.n.toLowerCase().includes("doppler")) {
+         const isGamma = skin.n.toLowerCase().includes("gamma");
+         const phases = isGamma ? gammaDopplerPhases : dopplerPhases;
+         for (const p of phases) {
+           const phaseName = `${skin.mh} (${p.label})`;
+           if (!seenNames.has(phaseName)) {
+             seenNames.add(phaseName);
+             // Find the skin entry with matching phase to get correct iconUrl
+             const phaseSkin = skins.find(s =>
+               s.mh === phaseName || s.n === phaseName
+             );
+             suggestions.push({
+               name: phaseName,
+               iconUrl: phaseSkin?.u || skin.u,
+               rarity: skin.r,
+               rarityColor: skin.c,
+               dopplerPhase: p.label,
+             });
+           }
+         }
+       } else if (!seenNames.has(skin.mh)) {
+         seenNames.add(skin.mh);
+         suggestions.push({
+           name: skin.mh,
+           iconUrl: skin.u,
+           rarity: skin.r,
+           rarityColor: skin.c,
+           dopplerPhase: skin.ph,
+         });
+       }
+     }
   }
 
   return NextResponse.json({ suggestions: suggestions.slice(0, 20) });

@@ -63,16 +63,16 @@ export async function GET(req: NextRequest) {
       skins = remoteData.map((s: any) => ({
         n: s.name || s.market_hash_name || "",
         mh: s.market_hash_name || s.name || "",
-        u: s.icon_url || "",
+        u: s.image || "",
         r: s.rarity || "",
         c: s.rarity_color || "",
-        w: s.wear || "",
-        cat: s.type || "",
-        we: s.weapon_type || "",
+        w: s.wear?.name || "",
+        cat: s.category?.name || s.type || "",
+        we: s.weapon?.name || s.weapon_type || "",
         st: !!s.stattrak,
         su: !!s.souvenir,
-        pi: s.pattern_index ?? null,
-        ph: s.doppler_phase || null,
+        pi: s.paint_index ? Number(s.paint_index) : null,
+        ph: s.phase || null,
       })) as SkinRaw[];
       cachedSkins = skins;
     } catch {
@@ -100,10 +100,8 @@ export async function GET(req: NextRequest) {
            const phaseName = `${skin.mh} (${p.label})`;
            if (!seenNames.has(phaseName)) {
              seenNames.add(phaseName);
-             // Find the skin entry with matching phase to get correct iconUrl
-             const phaseSkin = skins.find(s =>
-               s.mh === phaseName || s.n === phaseName
-             );
+             // Find skin with same base name (same weapon+wear) and matching phase
+             const phaseSkin = skins.find(s => s.n === skin.n && s.ph === p.label);
              suggestions.push({
                name: phaseName,
                iconUrl: phaseSkin?.u || skin.u,
